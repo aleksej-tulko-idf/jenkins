@@ -1,0 +1,31 @@
+#!/bin/bash
+set -e
+
+if [ "$ENV" = 'DEV' ]; then
+  echo "Running Development Server"
+  exec python "identidock.py"
+elif [ "$ENV" = 'UNIT' ]; then
+  echo "Running Unit Tests"
+  exec python "tests.by"
+else
+  echo "Running Production Server"
+  exec uwsgi --http 0.0.0.0:9090 --wsgi-file /app/identidock.py \
+             --callable app --stats 0.0.0.0:9191
+fi
+root@docker:~/image-dist/identidock# cat docker-compose.yml 
+identidock:
+  build: .
+  ports:
+    - "9090:9090"
+    - "9191:9191"
+  volumes:
+    - ./app:/app
+  links:
+    - dnmonster
+    - redis
+
+dnmonster:
+  image: amouat/dnmonster:1.0
+
+redis:
+  image: redis:3.0
